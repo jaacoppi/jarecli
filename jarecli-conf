@@ -1,0 +1,24 @@
+# Config file for jarecli - jaacoppi's reddit client
+# This must be in ~/.jarecli
+
+[userinfo]
+loginname = "nologin"
+loginpass = "nopass"
+
+# default subreddit & sort values
+[sort_criteria]
+subreddit = "worldnews"
+showlimit = 30
+type = 2	# hot = 1, new = 2, rising = 3, controversial = 4, top = 5e
+time = 0 	# all = 1, hour = 2, day = 3, month = 4, year = 5. 0 for Everything but top & controversial
+
+[external_apps]
+# if textmode is True, only browser is used. if False, a gui browser and imageviewer can be used
+# for textmode / terminal:
+textmode = True
+browser = "elinks"
+# for gui
+# textmode = False
+# browser = "firefox"
+# imageviewer = "feh"
+
