@@ -114,7 +114,19 @@ def show_usersubs(which):
 		listviewmod.populate_listview(yourself.get_submitted())
 	if (which == 6):
 		uimod.change_topbar("Listview for User Comments",curses.A_BOLD)
-		listviewmod.populate_listview(yourself.get_comments(),1)	# the 1 for iscomment = 1
+		uimod.uiscreen.addstr("Loading comments takes a long time due to reddit api restrictions. Please be patient.")
+		uimod.uiscreen.refresh()
+		for item in yourself.get_comments():
+			# loop until you find a comment that is directly under a submission
+			root_sub = item
+			while (root_sub.is_root == False):
+				root_sub = r.get_info(thing_id=root_sub.parent_id)
+
+			# a parent id is (apparently) given in the form "xxx_id" - so we strip everything up to '_'
+			submission_id = root_sub.parent_id.split('_')
+			appenditem = getsubmission_byid(str(submission_id[1]))
+			listviewmod.listviewitems.append(listviewmod.ListViewItemClass(appenditem.id, appenditem.title, appenditem.author, appenditem.selftext, appenditem.subreddit))
+
 
 	# set currentlist.subreddit to a special value so we now 'subreddit info' and some other things will be displayedo
 	listviewmod.currentlist.subreddit=None
@@ -551,7 +563,11 @@ def keyboardloop():
 def getsubmission_byid(id):
 #########################
 	global r
-	return r.get_submission(submission_id=id)
+	import requests
+	try: 
+		return r.get_submission(submission_id=id)
+	except requests.exceptions.HTTPError:
+		return None
 
 
 # submit a message

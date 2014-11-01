@@ -84,37 +84,11 @@ def reset_listview():
 
 # populate everything from items to currentlist
 #########################
-def populate_listview(items, iscomment = 0):
+def populate_listview(items):
 #########################
-	# needs: r as parameter
-
 	global listviewitems
-	import requests
-	import praw
-	# if a subreddit is not found in load_subreddit(), reddit redirects us to
-	# http://www.reddit.com/subreddits/search.json?q=currentlist.subreddit.
-	# we need to check for it in here, since PRAW uses lazy loading and it could be this is the first time the items are actually accessed
-	# praw.errors.RedirectException
-	# raise RedirectException(response.url, new_url)
-
-	# this is a submission
-	if (iscomment == 0):
-		for item in items:
-			listviewitems.append(ListViewItemClass(item.id, item.title, item.author, item.selftext, item.subreddit))
-
-	# This takes a long time due to Reddit API restrictions. Notify the user
-	# This is a comment object from get_comments(). We need to find the parent submission of every comment first
-	else:
-		uimod.uiscreen.addstr("Loading comments takes a long time due to reddit api restrictions. Please be patient\n")
-		uimod.uiscreen.refresh()
-		for item in items:
-			# loop until you find a comment that is directly under a submission
-			while (item.is_root == False):
-				item = r.get_info(thing_id=item.parent_id)
-				 # a parent id is (apparently) given in the form "xxx_id" - so we strip everything up to the _
-				submission_id = item.parent_id.split('_')
-				item = r.get_submission(submission_id=submission_id[1])			
-			listviewitems.append([item.id, item.title, item.author, item.selftext, item.subreddit])
+	for item in items:
+		listviewitems.append(ListViewItemClass(item.id, item.title, item.author, item.selftext, item.subreddit))
 
 	return
 
