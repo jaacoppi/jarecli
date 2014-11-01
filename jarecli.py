@@ -92,30 +92,21 @@ def show_usersubs(which):
 	uimod.uiscreen.addstr("Loading content for item, this might take a while depending on amount of items\n")
 	uimod.uiscreen.refresh()
 
-	# start from the beginning of an empty list
-	listviewmod.reset_listview()
+	# set currentlist.subreddit to a special value so we now 'subreddit info' and some other things will be displayedo
+	listviewmod.currentlist.subreddit=None
 
-	# populate listview with our current selection
-	if (which == 1):
-		uimod.change_topbar("Listview for User Liked",curses.A_BOLD)
-		listviewmod.populate_listview(yourself.get_liked())
-	if (which == 2):
-		uimod.change_topbar("Listview for User Disliked",curses.A_BOLD)
-		listviewmod.populate_listview(yourself.get_disliked())
-	# saved and hidden are r.user objects, not redditor objects
-	if (which == 3):
-		uimod.change_topbar("Listview for User Saved",curses.A_BOLD)
-		listviewmod.populate_listview(r.user.get_saved())
-	if (which == 4):
-		uimod.change_topbar("Listview for User Hidden",curses.A_BOLD)
-		listviewmod.populate_listview(r.user.get_hidden())
-	if (which == 5):
-		uimod.change_topbar("Listview for User Submitted",curses.A_BOLD)
-		listviewmod.populate_listview(yourself.get_submitted())
+	# for each special sub, load the contents and set topbar
+	# get_comments is a special case since we need to manually populate listview
+
+	# get_comments
 	if (which == 6):
+		listviewmod.currentlist.topbar = "usersub"
 		uimod.change_topbar("Listview for User Comments",curses.A_BOLD)
+
 		uimod.uiscreen.addstr("Loading comments takes a long time due to reddit api restrictions. Please be patient.")
 		uimod.uiscreen.refresh()
+		# start from the beginning of an empty list
+		listviewmod.reset_listview()
 		for item in yourself.get_comments():
 			# loop until you find a comment that is directly under a submission
 			root_sub = item
@@ -127,11 +118,35 @@ def show_usersubs(which):
 			appenditem = getsubmission_byid(str(submission_id[1]))
 			listviewmod.listviewitems.append(listviewmod.ListViewItemClass(appenditem.id, appenditem.title, appenditem.author, appenditem.selftext, appenditem.subreddit))
 
+		# finally, enter listview (don't populate, only show
+		listviewmod.enter_listview()
+		return
 
-	# set currentlist.subreddit to a special value so we now 'subreddit info' and some other things will be displayedo
-	listviewmod.currentlist.subreddit=None
-	# finally, enter listview
-	listviewmod.enter_listview()
+	# for others, we just get the submissions and topbar and let enter_listview do the work
+	if (which == 1):
+		listviewmod.currentlist.topbar = "userliked"
+		listviewmod.listview_defaulttopbar()
+		listviewmod.enter_listview(yourself.get_liked())
+
+	if (which == 2):
+		listviewmod.currentlist.topbar = "userdisliked"
+		listviewmod.listview_defaulttopbar()
+		listviewmod.enter_listview(yourself.get_disliked())
+	# saved and hidden are r.user objects, not redditor objects
+	if (which == 3):
+		listviewmod.currentlist.topbar = "usersaved"
+		listviewmod.listview_defaulttopbar()
+		listviewmod.enter_listview(r.user.get_saved())
+	if (which == 4):
+		listviewmod.currentlist.topbar = "userhidden"
+		listviewmod.listview_defaulttopbar()
+		listviewmod.enter_listview(r.user.get_hidden())
+	if (which == 5):
+		listviewmod.currentlist.topbar = "usersub"
+		listviewmod.listview_defaulttopbar()
+		listviewmod.enter_listview(yourself.get_submitted())
+
+
 
 
 # load configuration from a file
@@ -197,7 +212,7 @@ def goto_url(id):
 		subprocess.call([external_apps.browser, submission.url])
 		# redraw listview. TODO: ability to return to readerview as well
 		keyboardmode = 0
-		listviewmod.enter_listview() 
+		listviewmod.enter_listview(topbar="default") 
 	else:
 		# direct imgur image links
 		if (submission.url.find("i.imgur.com/") != -1):
@@ -289,7 +304,7 @@ def change_subreddit():
 	uimod.uiscreen.getch()
 
 	submissions = load_subreddit(listviewmod.currentlist, r)
-	listviewmod.enter_listview(submissions) # start with a fresh listview
+	listviewmod.enter_listview(submissions, topbar="default") # start with a fresh listview
 
 
 
@@ -373,6 +388,8 @@ def load_subreddit(listview, r = None):
 		uimod.uiscreen.getch()
 		change_subreddit()
 
+	# set our topbar to default listview 
+	listviewmod.currentlist.topbar = 0
 	return submissions
 
 
@@ -391,7 +408,7 @@ def subreddit_info(comingfrom):
 		readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
 	if (comingfrom == 1): 	
 		keyboardmode = 0
-		listviewmod.enter_listview()
+		listviewmod.enter_listview(topbar="default")
 
 
 
@@ -449,7 +466,7 @@ def keyboardloop():
 			# post a message to current subreddit.
 			if chr(input) == 'm':
 				submit_message()
-				listviewmod.enter_listview()
+				listviewmod.enter_listview(topbar="default")
 
 		################
 		# readerviewkeys
@@ -460,7 +477,7 @@ def keyboardloop():
 				keyboardmode = 0
 				readerviewmod.reader.topmost = 0	# reset reader.topmost
 				readerviewmod.reader.comment_branch = 0 # reset comment branch
-				listviewmod.enter_listview()
+				listviewmod.enter_listview(topbar="default")
 
 			if input == curses.KEY_DOWN:
 				if readerviewmod.reader.topmost < (len(readerviewmod.reader.contents) - uimod.uiscreen_maxy + 1):
@@ -705,7 +722,7 @@ if __name__ == "__main__":
 	submissions = load_subreddit(listviewmod.currentlist, r)
 
 	# 5. start listview and enter the main loop that changes state to/from listview/readerview/infoview and others
-	listviewmod.enter_listview(submissions) # start with a fresh listview
+	listviewmod.enter_listview(submissions,topbar="default") # start with a fresh listview
 	keyboardloop()
 #######################
 # EOF

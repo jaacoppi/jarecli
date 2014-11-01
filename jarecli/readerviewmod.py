@@ -150,13 +150,6 @@ def print_uiscreen(startline = 0):
 	return
 
 
-#########################
-def enter_readerview(line = 0):
-#########################
-	# display the stuff in reader starting from line line
-	print_uiscreen(line)
-
-
 
 # load a selected listviewitem from reddit to reader.contents
 #########################

@@ -42,7 +42,8 @@ class ListViewClass:
 	showlimit = 30
 	type = 2        # hot = 1, new = 2, rising = 3, controversial = 4, top = 5. What's the reddit te$
 	time = 0        # 1 for all, 2 for hour, 3 for today, 4 for month, 5 for year. 0 for everything $
-
+	# previous topbar to return to after readerview or infoview
+	topbar = 0
 	# return the line in uiscreen to be hilighted.
 	# this is used by currentlist.movement functions to calculate which item is currently selected
 	#########################
@@ -101,31 +102,38 @@ def listview_defaulttopbar():
 	import curses
 	# we need some globals from the main file
 
-	# subreddit info on topbar. Differentiate User Frontpage and /r/ subreddits
+	# subreddit info on topbar. Differentiate which list is in question
 	if currentlist.subreddit == None:
-		uimod.change_topbar("Listview for User Frontpage",curses.A_BOLD)
-	else:
+		if (currentlist.topbar == 0): # user frontpage
+			uimod.change_topbar("Listview for User Frontpage",curses.A_BOLD)
+		elif (currentlist.topbar == "userliked"):
+			uimod.change_topbar("Listview for User Liked", curses.A_BOLD)
+		elif (currentlist.topbar == "userdisliked"):
+			uimod.change_topbar("Listview for User Disliked", curses.A_BOLD)
+		elif (currentlist.topbar == "usersaved"):
+			uimod.change_topbar("Listview for User Saved", curses.A_BOLD)
+		elif (currentlist.topbar == "userhidden"):
+			uimod.change_topbar("Listview for User Hidden", curses.A_BOLD)
+		elif (currentlist.topbar == "usersub"):
+			uimod.change_topbar("Listview for User Submitted", curses.A_BOLD)
+		elif (currentlist.topbar == "usercom"):
+			uimod.change_topbar("Listview for User Comments", curses.A_BOLD)
+	else: 	# a regular subreddit
 		uimod.change_topbar("Listview for /r/" + currentlist.subreddit, curses.A_BOLD)
-	# TODO: print "item %d out of %d"
-	# this won't work since it's not updated on keypress (list up/down)
-	#	change_topbbar(". Item #%d" % currentlist.itemid)
 
-
-	# TODO: change change_topbar to be able to handle this
-	# TODO: def uimod.topbar_addtext(string, format)
-	uimod.topbar_addtext(". Sort criteria: ")
-	if (currentlist.type == 1): uimod.topbar_addtext("hot",1)
-	if (currentlist.type == 2): uimod.topbar_addtext("new",1)
-	if (currentlist.type == 3): uimod.topbar_addtext("rising",1)
-	if (currentlist.type == 4): uimod.topbar_addtext("controversial",1)
-	if (currentlist.type == 5): uimod.topbar_addtext("top",1)
-	# this only works for top and controversial. For others, time is set to 0 in change_subreddit
-	if (currentlist.type == 4 or currentlist.type == 5):
-		if (currentlist.time == 1): uimod.topbar_addtext(" by all",1)
-		if (currentlist.time == 2): uimod.topbar_addtext(" by hour",1)
-		if (currentlist.time == 3): uimod.topbar_addtext(" by day",1)
-		if (currentlist.time == 4): uimod.topbar_addtext(" by month",1)
-		if (currentlist.time == 5): uimod.topbar_addtext(" by year",1)
+		uimod.topbar_addtext(". Sort criteria: ")
+		if (currentlist.type == 1): uimod.topbar_addtext("hot",1)
+		if (currentlist.type == 2): uimod.topbar_addtext("new",1)
+		if (currentlist.type == 3): uimod.topbar_addtext("rising",1)
+		if (currentlist.type == 4): uimod.topbar_addtext("controversial",1)
+		if (currentlist.type == 5): uimod.topbar_addtext("top",1)
+		# this only works for top and controversial. For others, time is set to 0 in change_subreddit
+		if (currentlist.type == 4 or currentlist.type == 5):
+			if (currentlist.time == 1): uimod.topbar_addtext(" by all",1)
+			if (currentlist.time == 2): uimod.topbar_addtext(" by hour",1)
+			if (currentlist.time == 3): uimod.topbar_addtext(" by day",1)
+			if (currentlist.time == 4): uimod.topbar_addtext(" by month",1)
+			if (currentlist.time == 5): uimod.topbar_addtext(" by year",1)
 
 	uimod.topbar.refresh()
 
@@ -152,16 +160,26 @@ def listview_bold(topmost = 0):
 
 
 #########################
-def enter_listview(submissions = None):
+def enter_listview(submissions = None, topbar = None):
 #########################
 	global currentlist
-	# if submissions is not given we use the current one
+	# if run as enter_listview(), we simply rewrite current contents.
+	# when called with submissions and topbar inf, we change them
+	if (topbar == None): # don't change topbar
+		donothing = 1
+	elif (topbar == "default"):
+		listview_defaulttopbar()
+	else:
+		string, format = topbar
+		uimod.change_topbar(string,format)
+
+
+
 	if (submissions != None):
 		reset_listview()
 		populate_listview(submissions)
 
 	# in any case, we need to bold the current item and reprint screen
-	listview_defaulttopbar()
 	listview_bold()
 	readerviewmod.print_uiscreen(currentlist.topmost)
 
