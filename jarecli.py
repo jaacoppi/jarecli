@@ -157,10 +157,12 @@ def load_config(conf_file):
 	import configparser
 	config = configparser.ConfigParser()
 	if (config.read(conf_file) == []):
-		print("Config file " + conf_file + " not found, using defaults")
+		print("Config file " + conf_file + " not found or unparseable, using defaults. Press Enter to continue.")
+		from sys import stdin
+		stdin.read(1)
 		return
 	else:
-		print("Config file " + conf_file + " found, getting config")
+		print("Config file " + conf_file + " found, getting config.")
 
 	# TODO: error handling
 	# get userinfo
