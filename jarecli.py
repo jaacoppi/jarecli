@@ -640,7 +640,9 @@ def submit_message():
 
 	# get text
 	else:
-		uimod.uiscreen.addstr("Give text body for submission (in Markdown format): \n",0)
+		uimod.uiscreen.addstr("Give text body for submission (in Markdown format):\n",0)
+		uimod.uiscreen.addstr("A line with ""EOF"" only ends the message\n",0)
+		uimod.uiscreen.refresh()
 		while (True):
 			line = str(uimod.uiscreen.getstr().decode(encoding="utf-8")) # decode the byte from getstr to string
 			if line == "EOF":
@@ -662,16 +664,35 @@ def submit_message():
 	uimod.uiscreen.addstr("\nPress 'q' to abort, 'm' to post.\n", 1)
 	uimod.uiscreen.refresh()
 
+	curses.noecho()
 	# abort if necessary, otherwise post
 	while (True):
 		abort = uimod.uiscreen.getch()
 		if (chr(abort) == 'q'): return
 		if (chr(abort) == 'm'): break
-	
-	if type == '1':
-		r.submit(listviewmod.currentlist.subreddit, title, url=url)
-	else:
-		r.submit(listviewmod.currentlist.subreddit, title, text=textbody)
+
+	# send out r.submit(listviewmod.currentlist.subreddit, title, url/textbody, raise_captcha_exception=True)
+	try:
+		if type == '1': 
+			r.submit(listviewmod.currentlist.subreddit, title, url="url", raise_captcha_exception = True)
+		else:		
+			r.submit(listviewmod.currentlist.subreddit, title, text="textbody", raise_captcha_exception = True)
+
+	except praw.errors.InvalidCaptcha as e:
+		# if a captcha is needed, PRAW asks us for it
+		capurl = "http://www.reddit.com/captcha/" + e.response["captcha"] + ".png"
+		uimod.uiscreen.addstr("Captcha required, url here: " + capurl + "\n")
+		uimod.uiscreen.addstr("Enter captcha: ")
+		uimod.uiscreen.refresh()
+		curses.echo()
+		capresponse = str(uimod.uiscreen.getstr().decode(encoding="utf-8")) # decode the byte from getstr to string
+		curses.noecho()
+		cap = {'iden' : e.response["captcha"], 'captcha': capresponse}
+		# send the captcha. TODO: what to do with a misspelled captcha+
+		if type == '1': 
+			r.submit(listviewmod.currentlist.subreddit, title, url=url, raise_captcha_exception = True, captcha=cap)
+		else:		
+			r.submit(listviewmod.currentlist.subreddit, title, text=textbody, raise_captcha_exception = True, captcha=cap)
 		
 
 
