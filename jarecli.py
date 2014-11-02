@@ -32,7 +32,7 @@ class	externapps:
 
 class	userclass:
 	loggedin = False
-	loginname = "nologin"	# by default, don't log in
+	loginname = "nologin"	# if loginname == nologin, login is disabled. Sorry /u/nologin..
 	loginpass = "nopass"
 	userstr = "undefined user" 
 
@@ -44,11 +44,11 @@ user = userclass()
 # initialize globals
 #####################
 
-submissions = 1 # our submission, we them from load_subreddit
+submissions = 1 # our submission, we load them in load_subreddit
 keyboardmode = 0 	# 0 = listview, 1 = readerview, 2 = infoview
 yourself = 1	# holds get_redditor(user.loginname), used to show liked etc
 
-# open config file. TODO: maybe get config file as a paremeter?
+# configuration file is in ~/.jarecli
 from os.path import expanduser
 home = expanduser("~")
 conf_file = home + "/.jarecli"
@@ -61,14 +61,11 @@ items with keys.
 	
 Readerview displays stuff line by line. There's no items of any kind, only lines of text.
 
-Infoview is readerview for keyup,keydown, pageup & pagedown. It returns to either listview or readerview depending on where it was invoked
-
-All views utilize  printlines() and reader.contents[] to display content
+Infoview is readerview for keyup,keydown, pageup & pagedown. 
+It returns to either listview or readerview depending on where it was invoked
 """
 
-
-
-# show user liked in listview
+# shows "special subs" like User Liked, Disliked and so on in listview
 #########################
 def show_usersubs(which):
 #########################
@@ -157,12 +154,13 @@ def load_config(conf_file):
 	import configparser
 	config = configparser.ConfigParser()
 	if (config.read(conf_file) == []):
-		print("Config file " + conf_file + " not found or unparseable, using defaults. Press Enter to continue.")
-		from sys import stdin
-		stdin.read(1)
+		uimod.uiscreen.addstr("Config file " + conf_file + " not found or unparseable, using defaults. Press a key to continue.")
+		uimod.uiscreen.refresh()
+		uimod.uiscreen.getch()
 		return
 	else:
-		print("Config file " + conf_file + " found, getting config.")
+		uimod.uiscreen.addstr("Config file " + conf_file + " found, parsing it...\n")
+		uimod.uiscreen.refresh()
 
 	# TODO: error handling
 	# get userinfo
@@ -179,7 +177,6 @@ def load_config(conf_file):
 	external_apps.browser = config['external_apps']['browser']
 	external_apps.textmode = config['external_apps']['textmode']
 	external_apps.imageviewer = config['external_apps']['imageviewer']
-
 	return
 
 
@@ -188,7 +185,7 @@ def load_config(conf_file):
 def quit_jarecli():
 #########################
 	curses.endwin()
-	print("\n.." + PROGNAME + " exited succesfully.\n")
+	print("\n" + PROGNAME + " exited succesfully.\n")
 	quit()
 
 
@@ -249,7 +246,6 @@ def change_subreddit():
 		if (listviewmod.currentlist.subreddit == None): uimod.uiscreen.addstr("User Frontpage\n", curses.A_BOLD)
 		else: 	uimod.uiscreen.addstr(listviewmod.currentlist.subreddit + "\n", curses.A_BOLD)
 		uimod.uiscreen.refresh()
-
 	else:	# not empty, select it
 		listviewmod.currentlist.subreddit = newsub
 
@@ -301,65 +297,52 @@ def change_subreddit():
 		listviewmod.currentlist.showlimit = int(newlimit)
 		uimod.uiscreen.addstr("Selected %d" % listviewmod.currentlist.showlimit)
 
-	uimod.uiscreen.addstr("\nPRESS ENTER\n")
+	uimod.uiscreen.addstr("\nPress a key to display selected subreddit.\n", curses.A_BOLD)
 	uimod.uiscreen.refresh()
 	uimod.uiscreen.getch()
 
-	submissions = load_subreddit(listviewmod.currentlist, r)
+	submissions = load_subreddit()
 	listviewmod.enter_listview(submissions, topbar="default") # start with a fresh listview
 
 
 
 # load and return items from a selected subreddit to listview
+# TODO: put show_usersubs here as well
 #######################
-def load_subreddit(listview, r = None):
+def load_subreddit():
 #######################
-	global uiscreen
+	global r
 	# Get submissions
+	listview = listviewmod.currentlist
 	import requests
-	try:
-		if (listview.subreddit == None): # User Frontpage
-			submissions = r.get_front_page(limit=listview.showlimit)
-		else: # we want listview.subreddit
-			## get_hot
-			if listview.type == 1: 	submissions = r.get_subreddit(listview.subreddit).get_new(limit=listview.showlimit)
+	if (listview.subreddit == None): # User Frontpage
+		submissions = r.get_front_page(limit=listview.showlimit)
+	else: # we want listview.subreddit
+		## get_hot
+		if listview.type == 1: 	submissions = r.get_subreddit(listview.subreddit).get_new(limit=listview.showlimit)
 
-			# get_new
-			if listview.type == 2:	submissions = r.get_subreddit(listview.subreddit).get_hot(limit=listview.showlimit)
+		# get_new
+		if listview.type == 2:	submissions = r.get_subreddit(listview.subreddit).get_hot(limit=listview.showlimit)
 
-			# get_new
-			if listview.type == 3:	submissions = r.get_subreddit(listview.subreddit).get_rising(limit=listview.showlimit)
+		# get_new
+		if listview.type == 3:	submissions = r.get_subreddit(listview.subreddit).get_rising(limit=listview.showlimit)
 
-			# get_controversial
-			if listview.type == 4:
-				if listview.time == 1:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_all(limit=listview.showlimit)
-				if listview.time == 2:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_hour(limit=listview.showlimit)
-				if listview.time == 3:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_day(limit=listview.showlimit)
-				if listview.time == 4:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_month(limit=listview.showlimit)
-				if listview.time == 5:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_year(limit=listview.showlimit)
+		# get_controversial
+		if listview.type == 4:
+			if listview.time == 1:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_all(limit=listview.showlimit)
+			if listview.time == 2:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_hour(limit=listview.showlimit)
+			if listview.time == 3:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_day(limit=listview.showlimit)
+			if listview.time == 4:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_month(limit=listview.showlimit)
+			if listview.time == 5:	submissions = r.get_subreddit(listview.subreddit).get_controversial_from_year(limit=listview.showlimit)
 
-			# get_top	
-			if listview.type == 5:
-				if listview.time == 1:	submissions = r.get_subreddit(listview.subreddit).get_top_from_all(limit=listview.showlimit)
-				if listview.time == 2:	submissions = r.get_subreddit(listview.subreddit).get_top_from_hour(limit=listview.showlimit)
-				if listview.time == 3:	submissions = r.get_subreddit(listview.subreddit).get_top_from_day(limit=listview.showlimit)
-				if listview.time == 4:	submissions = r.get_subreddit(listview.subreddit).get_top_from_month(limit=listview.showlimit)
-				if listview.time == 5:	submissions = r.get_subreddit(listview.subreddit).get_top_from_year(limit=listview.showlimit)
+		# get_top	
+		if listview.type == 5:
+			if listview.time == 1:	submissions = r.get_subreddit(listview.subreddit).get_top_from_all(limit=listview.showlimit)
+			if listview.time == 2:	submissions = r.get_subreddit(listview.subreddit).get_top_from_hour(limit=listview.showlimit)
+			if listview.time == 3:	submissions = r.get_subreddit(listview.subreddit).get_top_from_day(limit=listview.showlimit)
+			if listview.time == 4:	submissions = r.get_subreddit(listview.subreddit).get_top_from_month(limit=listview.showlimit)
+			if listview.time == 5:	submissions = r.get_subreddit(listview.subreddit).get_top_from_year(limit=listview.showlimit)
 	
-	# these will probably never be triggered because of PRAW lazy loading. Will be removed later.
-	except requests.exceptions.HTTPError:
-		uimod.uiscreen.addstr("HTTPError: subreddit not found. Check case-sensitive spelling and try again.\n")
-		uimod.uiscreen.addstr("PRESS A KEY\n")
-		uimod.uiscreen.refresh()
-		uimod.uiscreen.getch()
-		change_subreddit()
-
-	except praw.errors.RedirectException:
-		uimod.uiscreen.addstr("PRAW RedirectException: subreddit not found. Check case-sensitive spelling and try again.\n")
-		uimod.uiscreen.addstr("PRESS A KEY\n")
-		uimod.uiscreen.refresh()
-		uimod.uiscreen.getch()
-		change_subreddit()
 
 	# if we used /r/random, we need to adjust listview.subreddit so we know the actual subreddit name, not simply "random" (also affects viewing subreddit info etc)
 	if (listview.subreddit == "random"):
@@ -367,7 +350,6 @@ def load_subreddit(listview, r = None):
 		for item in submissions:
 			listview.subreddit = str(item.subreddit)
 			break
-
 
 	try:
 		# turn the generator into a list. A list uses more memory, but we can avoid 
@@ -378,14 +360,14 @@ def load_subreddit(listview, r = None):
 		uimod.uiscreen.addstr("Received RedirectException, can't find this subreddit.\n")
 		uimod.uiscreen.addstr("Tried: " + e.request_url + "\n")
 		uimod.uiscreen.addstr("Got: " + e.response_url + "\n")
-		uimod.uiscreen.addstr("Press Enter to change subreddit\n")
+		uimod.uiscreen.addstr("Press a key to try again.")
 		uimod.uiscreen.refresh()
 		uimod.uiscreen.getch()
 		change_subreddit()
 
 	except requests.exceptions.HTTPError:
 		uimod.uiscreen.addstr("HTTPError: subreddit not found. Check case-sensitive spelling and try again.\n")
-		uimod.uiscreen.addstr("PRESS A KEY\n")
+		uimod.uiscreen.addstr("Press a key to try again.")
 		uimod.uiscreen.refresh()
 		uimod.uiscreen.getch()
 		change_subreddit()
@@ -396,23 +378,14 @@ def load_subreddit(listview, r = None):
 
 
 ###############################
-def subreddit_info(comingfrom):
+def subreddit_info():
 ###############################
 	global keyboardmode
 	if (listviewmod.currentlist.subreddit != None):
 		submission = r.get_subreddit(listviewmod.currentlist.subreddit)
-		readerviewmod.enter_infoview([["Subreddit info for " + listviewmod.currentlist.subreddit + "\n",1],[submission.description, 0]], comingfrom)
+		readerviewmod.enter_infoview([["Subreddit info for " + listviewmod.currentlist.subreddit + "\n",1],[submission.description, 0]])
 	else:
-		readerviewmod.enter_infoview([["You are currently something else than a normal subreddit. This could be user frontpage or something similar. Press Enter.", 0]], comingfrom)
-
-	if (comingfrom == 0): 	
-		keyboardmode = 1
-		readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
-	if (comingfrom == 1): 	
-		keyboardmode = 0
-		listviewmod.enter_listview(topbar="default")
-
-
+		readerviewmod.enter_infoview([["You are currently something else than a normal subreddit. This could be user frontpage or something similar. Press Enter.", 0]])
 
 
 
@@ -451,7 +424,10 @@ def keyboardloop():
 			# show subreddit info - enter_infoview
 			if chr(input) == 'i':
 				keyboardmode = 3 # keyboard actually handled through subreddit_info
-				subreddit_info(1)
+				subreddit_info()
+				keyboardmode = 0
+				listviewmod.enter_listview()
+				continue
 
 			# for opening a subreddit with options
 			if chr(input) == 'r':
@@ -502,79 +478,69 @@ def keyboardloop():
 					readerviewmod.reader.topmost = (len(readerviewmod.reader.contents) - uimod.uiscreen_maxy + 1)
 					readerviewmod.print_uiscreen(readerviewmod.reader.topmost)
 
-			# show subreddit info - enter_infoview
-			if chr(input) == 'i':
-				keyboardmode = 3
-				subreddit_info(0)
-
-
 			# goto - open an external app
 			if chr(input) == 'g':
 				goto_url(listviewmod.currentlist.itemid)
 
-		# save
-		if chr(input) == 's':
-			submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
-			try:
-				submission.save()
-				readerviewmod.enter_infoview([["Saved this item!\nPress Enter.",0]],0)
-			except 	praw.errors.LoginOrScopeRequired:
-				readerviewmod.enter_infoview([["You are not logged in, can't save this item.", 0]], 0)
+			# save
+			if chr(input) == 's':
+				submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
+				try:
+					submission.save()
+					readerviewmod.enter_infoview([["Saved this item!\nPress Enter.",0]],0)
+				except 	praw.errors.LoginOrScopeRequired:
+					readerviewmod.enter_infoview([["You are not logged in, can't save this item.", 0]], 0)
 			
-			keyboardmode = 1
-			readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
+				keyboardmode = 1
+				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
  
-		# hide
-		if chr(input) == 'h':
-			submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
-			readerviedmod.reader.contents[:] = []
-			try:
-				submission.hide()
-				readerviewmod.enter_infoview([["This item is now hidden.",0]],0)
-			except 	praw.errors.LoginOrScopeRequired:
-				readerviewmod.enter_infoview([["You are not logged in, can't hide this item.",0]],0)
+			# hide
+			if chr(input) == 'h':
+				submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
+				readerviedmod.reader.contents[:] = []
+				try:
+					submission.hide()
+					readerviewmod.enter_infoview([["This item is now hidden.",0]],0)
+				except 	praw.errors.LoginOrScopeRequired:
+					readerviewmod.enter_infoview([["You are not logged in, can't hide this item.",0]],0)
 
-			keyboardmode = 1
-			readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
+				keyboardmode = 1
+				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
 
-		# upvote
-		if chr(input) == '+':
-			submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
-			try:
-				submission.upvote()
-				readerviewmod.enter_infoview([["Upvoted/liked this item!",0]],0)
-			except 	praw.errors.LoginOrScopeRequired:
-				readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]],0)
+			# upvote
+			if chr(input) == '+':
+				submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
+				try:
+					submission.upvote()
+					readerviewmod.enter_infoview([["Upvoted/liked this item!",0]],0)
+				except 	praw.errors.LoginOrScopeRequired:
+					readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]],0)
 
-			keyboardmode = 1
-			readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
-
-
-		# downvote 
-		if input == 45: # apparently, chr(input) == '-' doesn't work
-			submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
-			try:
-				submission.downvote()
-				readerviewmod.enter_infoview([["Downvoted/disliked this item!",0]],0)
-			except 	praw.errors.LoginOrScopeRequired:
-				readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]],0)
-
-			keyboardmode = 1
-			readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
+				keyboardmode = 1
+				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
 
 
+			# downvote 
+			if input == 45: # apparently, chr(input) == '-' doesn't work
+				submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
+				try:
+					submission.downvote()
+					readerviewmod.enter_infoview([["Downvoted/disliked this item!",0]],0)
+				except 	praw.errors.LoginOrScopeRequired:
+					readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]],0)
 
-		# load &  more comments
-		if chr(input) == 'c':
-			sub = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
-			readerviewmod.reader.comment_load_nextbranch(sub, listviewmod.listviewitems[listviewmod.currentlist.itemid])
+				keyboardmode = 1
+				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
 
 
 
+			# load &  more comments
+			if chr(input) == 'c':
+				sub = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
+				readerviewmod.reader.comment_load_nextbranch(sub, listviewmod.listviewitems[listviewmod.currentlist.itemid])
 
-	# pressed quit in listview
+	# the keyboardloop should never escape here. If it does, quit.
 	quit_jarecli()
-
 
 
 # get submission by id
@@ -586,6 +552,7 @@ def getsubmission_byid(id):
 	try: 
 		return r.get_submission(submission_id=id)
 	except requests.exceptions.HTTPError:
+		# TODO: handle this correctly
 		return None
 
 
@@ -703,32 +670,32 @@ def submit_message():
 if __name__ == "__main__":
 #########################
 	global r
-	print(PROGNAME + " " + VERSION + " starting...")
 
-	print("Importing required module PRAW...")
+	# 0. init UI and print a start message so the user can patiently wait
+	uimod.initcurses(PROGNAME, VERSION)
+	uimod.uiscreen.addstr("%s" % PROGNAME + " %s" % VERSION + " starting...\n")
+	uimod.uiscreen.refresh()
 	import praw
 
 	# 0. Load configuration from file, if any. If not, defaults are used.
 	load_config(conf_file)
 
-	# 1. init UI
-	uimod.initcurses(PROGNAME,VERSION)
-
 	# 2. initialize the Reddit connection (not sure what this call actually does
 	userstr = PROGNAME + " " + VERSION + " " + user.userstr
-	uimod.uiscreen.addstr("Initializing Reddit connection for " + userstr + "\n")
+	uimod.uiscreen.addstr("Initializing connection to Reddit.com for " + userstr + "...\n")
+	uimod.uiscreen.refresh()
 	# give Reddit our useragent for common courtesy (and API guidelines)
 	r = praw.Reddit(user_agent=userstr)
 
 	# 3. login automatically if found in config file
 	if (user.loginname != "nologin"):
 		try:
-			# this subreddit doesn't actually exist, it's a hack used in load_subreddit
+			# this subreddit doesn't actually exist, it's a hack
 			listviewmod.currentlist.subreddit = None
-			# TODO: find and remove urllib 3 InsecureRequestWarning
+			# TODO: find and remove urllib 3 InsecureRequestWarning that happens sometimes
 			# https://urllib3.readthedocs.org/en/latest/security.html
 			r.login(user.loginname,user.loginpass)
-			uimod.uiscreen.addstr("Logging in as user " + user.loginname + ", this might take a few seconds\n")
+			uimod.uiscreen.addstr("Logging in as user " + user.loginname + "...\n")
 			uimod.uiscreen.refresh()
 			user.loggedin = True
 			yourself = r.get_redditor(user.loginname)
@@ -742,11 +709,10 @@ if __name__ == "__main__":
 
 
 	# 4. load the first subreddit. If logged in, it's the frontpage. This also displays it in listview
-	submissions = load_subreddit(listviewmod.currentlist, r)
+	submissions = load_subreddit()
 
 	# 5. start listview and enter the main loop that changes state to/from listview/readerview/infoview and others
 	listviewmod.enter_listview(submissions,topbar="default") # start with a fresh listview
 	keyboardloop()
 #######################
 # EOF
-

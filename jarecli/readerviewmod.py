@@ -52,16 +52,12 @@ class ReaderViewClass:
 		return
 
 
-
-
-
 reader = ReaderViewClass()
 
 # load a comment to readerview .contents[]
 #########################
 def loadcomment(comment,parent):
 #########################
-	# note: we used to check for MoreComments here, but now comment_loopreplies does it.
 	# mark original author posts in comments
 	if (comment.author == parent.author):
 		appendline("comment " + comment.id + " by " + str(comment.author) + " (Original poster)", 1)
@@ -95,9 +91,9 @@ def appendline(linestring, format = 0):
 	return
 
 
-# the function prints a screenful of text in list reader.contents starting from line
-# reader.contents must be of format [text, format]
-# text is a uiscreen_maxx long string, format is 0 for nothing, else for bold
+# the function prints a screenful of text in list reader.contents starting from startline
+# reader.contents must be of format [text, format],
+# where text is a uiscreen_maxx long string, format is 0 for nothing, else for bold
 #########################
 def print_uiscreen(startline = 0):
 #########################
@@ -106,10 +102,8 @@ def print_uiscreen(startline = 0):
 	uimod.uiscreen.clear()
 	# print at most all the lines in reader.contents. 
 	# If they don't fit the screen, print at most a screenful
-	
-	# calculate the proper endline - how long in reader.contents should we go?
-	# TODO: simplify code
-	# by default, go to the end
+
+	# calculate how many lines to print
 	endline = len(reader.contents)
 		
 	# if the range is more than screensize, cap it to screensize
@@ -136,18 +130,12 @@ def print_uiscreen(startline = 0):
 			else:
 				uimod.uiscreen.addstr(item, curses.A_BOLD)
 
-                # this happens if a text body or comments have newlines.
-                # appendline doesn't detect them, so printing line by line doesn't work.
-                # we circumvent the problem by stopping writing here.
-		except uimod.curses.error:
                 # TODO: this should never happen. It mostly happens when addstr happens on last row and len(item) == uiscreen_maxx. There would be a newline, but we can't fit it in since it's the last line and an overflow occurs
                 # basically we're fine skipping it, but this is lousy coding
+		except uimod.curses.error:
 			break
-  
 		
 	uimod.uiscreen.refresh()
-
-	return
 
 
 
@@ -160,7 +148,7 @@ def loaditem(redditconnection, selected_listviewitem):
 	uimod.change_topbar("Readerview item at /r/" + str(selected_listviewitem.subreddit),1)
 	# clear current screen and give a debug message
 	uimod.uiscreen.clear()
-	uimod.uiscreen.addstr("Loading content for item, this might take a while..\n")
+	uimod.uiscreen.addstr("Loading content, this might take a while..\n")
 	uimod.uiscreen.refresh()
 	submission = redditconnection.get_submission(submission_id=selected_listviewitem.redditid)
 
@@ -177,7 +165,6 @@ def loaditem(redditconnection, selected_listviewitem):
 		appendline("Link to original content: " + submission.url + "\n")
 		appendline("")
 
-
 	# OP selftext
 	appendline(str(selected_listviewitem.text) + "\n")
 	
@@ -185,18 +172,16 @@ def loaditem(redditconnection, selected_listviewitem):
 	### comments ###
 	# set maximum amount of comments
 	reader.comment_trees = len(submission.comments)
-	appendline("This item has %d comments" % submission.num_comments + " in %d branches. Press 'c' to load the next comment branch. This will take a while for large branches due to Reddit API restrictions.\n" % reader.comment_trees, 1)
+	if (submission.num_comments == 0): appendline("This item has no comments.",1)
+	else: 	appendline("This item has %d comments" % submission.num_comments + " in %d branches. Press 'c' to load the next comment branch. This will take a while for large branches due to Reddit API restrictions.\n" % reader.comment_trees, 1)
 	
 	print_uiscreen()
-
-	return
 
 
 # Enters infoview by printing everything in reader enabling infoviewkeys
 # infotextlist is [item, format], where item is a string and format is appendline formatting
-# TODO: is comingfrom actually needed for anything?
 #########################
-def enter_infoview(infotextlist, comingfrom):
+def enter_infoview(infotextlist):
 #########################
 	# display the stuff in reader, always starting from line 0
 
@@ -207,12 +192,12 @@ def enter_infoview(infotextlist, comingfrom):
 		appendline(item,format)
 
 	print_uiscreen()
-	return infoviewkeys(comingfrom)
+	infoviewkeys()
 
 # keybinds for infoview. 
 # TODO: move these inside the main keyloop
 #########################
-def infoviewkeys(comingfrom):
+def infoviewkeys():
 #########################
 	global reader
 	while True:
@@ -221,10 +206,7 @@ def infoviewkeys(comingfrom):
 		# return to readerview or listview with enter or space
 		if (input == curses.KEY_ENTER or input == 10 or input == 32):
 			reader.topmost = 0	# reset reader.topmost
-			if (comingfrom == 0): # coming from reader
-				return 1
-			if (comingfrom == 1):
-				return 2
+			return
 		
 		if input == curses.KEY_DOWN:
 			if reader.topmost < (len(reader.contents) - uimod.uiscreen_maxy + 1):

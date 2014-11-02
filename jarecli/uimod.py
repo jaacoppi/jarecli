@@ -15,9 +15,6 @@ topbar = 0
 uiscreen_maxx = 1
 iscreen_maxy = 1
 
-
-
-
 # init the UI
 #########################
 def initcurses(PROGNAME, VERSION):
@@ -27,7 +24,6 @@ def initcurses(PROGNAME, VERSION):
 	# mainscreen holds all other windows. Used for nothing else
 	mainscreen = curses.initscr()
 
-
 	curses.noecho()	# don't echo what you type
 	curses.curs_set(0)
 	curses.cbreak()		# TODO: is this needed?
@@ -35,19 +31,18 @@ def initcurses(PROGNAME, VERSION):
 	# get screen dimensions. Note that uiscreen_maxy and _maxx are set correctly later
 	uiscreen_maxy, uiscreen_maxx  = mainscreen.getmaxyx()
 
-	prognameline = mainscreen.subwin(2,uiscreen_maxx,0,0)
 
-	# print top bar in prognameline
-	prognameline.addstr(0,0, PROGNAME + " " + VERSION + " - A Reddit client (C) jaacoppi 2014. MIT LICENSED")
+	# init the topmost line for version and copyright information.
+	prognameline = mainscreen.subwin(2,uiscreen_maxx,0,0)
+	prognameline.addstr(0,0, PROGNAME + " " + VERSION + " - A Reddit client (C) jaacoppi 2014")
 	
-	# define the outer box
+	# define the topbar, where info about listview/readerview/infoview goes.
 	topbar = mainscreen.subwin(1,uiscreen_maxx,2,0)
 
 	# calculate the size of of uiscreen so it's right below topbar
 	uiscreen_maxy = uiscreen_maxy - 3
 
 	# create uiscreen
-	# TODO: uiscreen should be a subwin of _box. No effect on anything, but for code cleanness
 	uiscreen = mainscreen.subwin(uiscreen_maxy,uiscreen_maxx,3,0)
 	uiscreen.keypad(1)
 
@@ -58,7 +53,6 @@ def initcurses(PROGNAME, VERSION):
 	prognameline.refresh()
 	topbar.refresh()
 	uiscreen.refresh()
-
 
 
 
@@ -83,4 +77,3 @@ def topbar_addtext(linestring,format = 0):
 	else:	topbar.addstr(y,x,linestring,curses.A_BOLD)
 
 	topbar.refresh()
-

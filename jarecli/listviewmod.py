@@ -62,16 +62,12 @@ class ListViewClass:
 	def get_listviewlines(self,id):
 	#########################
 		global listviewitems
-		lines = (int) (len(listviewitems[id].title) / uimod.uiscreen_maxx) + 1
-		return lines
+		return (int) (len(listviewitems[id].title) / uimod.uiscreen_maxx) + 1
 
 
 currentlist = ListViewClass()
 
-
-### self contained - only need listviewmod
-
-# reset listviewitems- empty it
+# reset listviewitems - empty it
 #########################
 def reset_listview():
 #########################
@@ -79,8 +75,6 @@ def reset_listview():
 	listviewitems = []
 	currentlist.itemid = 0
 	currentlist.topmost = 0
-
-
 
 
 # populate everything from items to currentlist
@@ -91,35 +85,32 @@ def populate_listview(items):
 	for item in items:
 		listviewitems.append(ListViewItemClass(item.id, item.title, item.author, item.selftext, item.subreddit))
 
-	return
-
 
 # display default top bar for listview
 #########################
 def listview_defaulttopbar():
 #########################
 	global listview
-	import curses
 	# we need some globals from the main file
 
 	# subreddit info on topbar. Differentiate which list is in question
 	if currentlist.subreddit == None:
 		if (currentlist.topbar == 0): # user frontpage
-			uimod.change_topbar("Listview for User Frontpage",curses.A_BOLD)
+			uimod.change_topbar("Listview for User Frontpage",1)
 		elif (currentlist.topbar == "userliked"):
-			uimod.change_topbar("Listview for User Liked", curses.A_BOLD)
+			uimod.change_topbar("Listview for User Liked", 1)
 		elif (currentlist.topbar == "userdisliked"):
-			uimod.change_topbar("Listview for User Disliked", curses.A_BOLD)
+			uimod.change_topbar("Listview for User Disliked", 1)
 		elif (currentlist.topbar == "usersaved"):
-			uimod.change_topbar("Listview for User Saved", curses.A_BOLD)
+			uimod.change_topbar("Listview for User Saved", 1)
 		elif (currentlist.topbar == "userhidden"):
-			uimod.change_topbar("Listview for User Hidden", curses.A_BOLD)
+			uimod.change_topbar("Listview for User Hidden", 1)
 		elif (currentlist.topbar == "usersub"):
-			uimod.change_topbar("Listview for User Submitted", curses.A_BOLD)
+			uimod.change_topbar("Listview for User Submitted", 1)
 		elif (currentlist.topbar == "usercom"):
-			uimod.change_topbar("Listview for User Comments", curses.A_BOLD)
+			uimod.change_topbar("Listview for User Comments", 1)
 	else: 	# a regular subreddit
-		uimod.change_topbar("Listview for /r/" + currentlist.subreddit, curses.A_BOLD)
+		uimod.change_topbar("Listview for /r/" + currentlist.subreddit, 1)
 
 		uimod.topbar_addtext(". Sort criteria: ")
 		if (currentlist.type == 1): uimod.topbar_addtext("hot",1)
@@ -127,7 +118,7 @@ def listview_defaulttopbar():
 		if (currentlist.type == 3): uimod.topbar_addtext("rising",1)
 		if (currentlist.type == 4): uimod.topbar_addtext("controversial",1)
 		if (currentlist.type == 5): uimod.topbar_addtext("top",1)
-		# this only works for top and controversial. For others, time is set to 0 in change_subreddit
+		# in Reddit, hot and controversial can be queried by date 
 		if (currentlist.type == 4 or currentlist.type == 5):
 			if (currentlist.time == 1): uimod.topbar_addtext(" by all",1)
 			if (currentlist.time == 2): uimod.topbar_addtext(" by hour",1)
@@ -136,9 +127,6 @@ def listview_defaulttopbar():
 			if (currentlist.time == 5): uimod.topbar_addtext(" by year",1)
 
 	uimod.topbar.refresh()
-
-
-
 
 # bold the listview.itemid in readerviewmod.reader.contents
 #########################
@@ -172,8 +160,6 @@ def enter_listview(submissions = None, topbar = None):
 	else:
 		string, format = topbar
 		uimod.change_topbar(string,format)
-
-
 
 	if (submissions != None):
 		reset_listview()
@@ -221,13 +207,13 @@ def list_down(pagedown):
 		if (currentitemrow + nrlines  > uimod.uiscreen_maxy):
 			# to scroll, advance currentlist.topmost so this item fits, then redraw
 			currentlist.topmost += nrlines
-			listview_bold()
-			readerviewmod.print_uiscreen(currentlist.topmost)
+			enter_listview()
+			return
+		else:
+			# if we didn't scroll, bold selected item by rewriting it
+			uimod.uiscreen.addstr(currentlist.get_hilightrow(currentlist.itemid),0,listviewitems[currentlist.itemid].title, curses.A_BOLD)
+			uimod.uiscreen.refresh()
 
-	# both with page down and key down, bold next item by rewriting it
-	uimod.uiscreen.addstr(currentlist.get_hilightrow(currentlist.itemid),0,listviewitems[currentlist.itemid].title, curses.A_BOLD)
-
-	uimod.uiscreen.refresh()
 	return
 
 
@@ -262,7 +248,7 @@ def list_up(pageup):
 			if (currentlist.topmost <= 0):
 				currentlist.topmost = 0			
 			enter_listview()
-
-		# bold next item
-		uimod.uiscreen.addstr(currentlist.get_hilightrow(currentlist.itemid),0,listviewitems[currentlist.itemid].title,curses.A_BOLD)
-		uimod.uiscreen.refresh()
+		else:
+			# bold selected item
+			uimod.uiscreen.addstr(currentlist.get_hilightrow(currentlist.itemid),0,listviewitems[currentlist.itemid].title,curses.A_BOLD)
+			uimod.uiscreen.refresh()
