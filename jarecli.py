@@ -487,9 +487,9 @@ def keyboardloop():
 				submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
 				try:
 					submission.save()
-					readerviewmod.enter_infoview([["Saved this item!\nPress Enter.",0]],0)
+					readerviewmod.enter_infoview([["Saved this item!\nPress Enter.",0]])
 				except 	praw.errors.LoginOrScopeRequired:
-					readerviewmod.enter_infoview([["You are not logged in, can't save this item.", 0]], 0)
+					readerviewmod.enter_infoview([["You are not logged in, can't save this item.", 0]])
 			
 				keyboardmode = 1
 				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
@@ -500,9 +500,9 @@ def keyboardloop():
 				readerviedmod.reader.contents[:] = []
 				try:
 					submission.hide()
-					readerviewmod.enter_infoview([["This item is now hidden.",0]],0)
+					readerviewmod.enter_infoview([["This item is now hidden.",0]])
 				except 	praw.errors.LoginOrScopeRequired:
-					readerviewmod.enter_infoview([["You are not logged in, can't hide this item.",0]],0)
+					readerviewmod.enter_infoview([["You are not logged in, can't hide this item.",0]])
 
 				keyboardmode = 1
 				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
@@ -512,9 +512,9 @@ def keyboardloop():
 				submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
 				try:
 					submission.upvote()
-					readerviewmod.enter_infoview([["Upvoted/liked this item!",0]],0)
+					readerviewmod.enter_infoview([["Upvoted/liked this item!",0]])
 				except 	praw.errors.LoginOrScopeRequired:
-					readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]],0)
+					readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]])
 
 				keyboardmode = 1
 				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
@@ -525,9 +525,9 @@ def keyboardloop():
 				submission = getsubmission_byid(listviewmod.listviewitems[listviewmod.currentlist.itemid].redditid)
 				try:
 					submission.downvote()
-					readerviewmod.enter_infoview([["Downvoted/disliked this item!",0]],0)
+					readerviewmod.enter_infoview([["Downvoted/disliked this item!",0]])
 				except 	praw.errors.LoginOrScopeRequired:
-					readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]],0)
+					readerviewmod.enter_infoview([["You are not logged in, can't vote.",0]])
 
 				keyboardmode = 1
 				readerviewmod.loaditem(r,listviewmod.listviewitems[listviewmod.currentlist.itemid])
@@ -563,7 +563,7 @@ def submit_message():
 	global r
 	# do nothing if you're not viewing proper subreddit
 	if (listviewmod.currentlist.subreddit == None):
-		readerviewmod.enter_infoview([["You are not viewing any subreddit, can't submit a message!\nPress Enter", 0]], 1)
+		readerviewmod.enter_infoview([["You are not viewing any subreddit, can't submit a message!\nPress Enter", 0]])
 		return
 
 	uimod.uiscreen.clear()
