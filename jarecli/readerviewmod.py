@@ -59,14 +59,19 @@ reader = ReaderViewClass()
 def loadcomment(comment,parent):
 #########################
 	# mark original author posts in comments
-	if (comment.author == parent.author):
-		appendline("comment " + comment.id + " by " + str(comment.author) + " (Original poster)", 1)
-	else:
-		appendline("comment " + comment.id + " by " + str(comment.author), 1)
+	import requests
+	try:
+		if (comment.author == parent.author):
+			appendline("comment " + comment.id + " by " + str(comment.author) + " (Original poster)", 1)
+		else:
+			appendline("comment " + comment.id + " by " + str(comment.author), 1)
+	
+		# comment body + a newline before next comment
+		appendline(comment.body)
+		appendline("")
+	except requests.exceptions.HTTPError:
+		appendline("Debug: received HTTPError with this comment..")
 
-	# comment body + a newline before next comment
-	appendline(comment.body)
-	appendline("")
 
 
 # append a string to reader.contents line by line
@@ -150,7 +155,15 @@ def loaditem(redditconnection, selected_listviewitem):
 	uimod.uiscreen.clear()
 	uimod.uiscreen.addstr("Loading content, this might take a while..\n")
 	uimod.uiscreen.refresh()
-	submission = redditconnection.get_submission(submission_id=selected_listviewitem.redditid)
+	import requests
+	try:
+		submission = redditconnection.get_submission(submission_id=selected_listviewitem.redditid)
+	except requests.exceptions.HTTPError:
+		uimod.uiscreen.addstr("HTTP Error loading this item, unable to continue.\n")
+		uimod.uiscreen.addstr("Press a key to continue.\n")
+		uimod.uiscreen.refresh()
+		uimod.uiscreen.getch()
+		return
 
 	# empty current readerview
 	reader.contents[:] = []
