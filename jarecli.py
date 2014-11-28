@@ -312,6 +312,11 @@ def change_subreddit():
 def load_subreddit():
 #######################
 	global r
+	# clear current screen and give a debug message
+	uimod.uiscreen.clear()
+	uimod.uiscreen.addstr("Loading content for item, this might take a while depending on amount of items\n")
+	uimod.uiscreen.refresh()
+
 	# Get submissions
 	listview = listviewmod.currentlist
 	import requests
