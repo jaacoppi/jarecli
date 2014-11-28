@@ -669,6 +669,10 @@ def submit_message():
 			r.submit(listviewmod.currentlist.subreddit, title, text=textbody, raise_captcha_exception = True, captcha=cap)
 		
 
+		# load the current subreddit again
+		enter_infoview([["You have succesfully submitted an item. Press Enter to load the subreddit again.",0]])
+		submissions = load_subreddit()
+		listviewmod.enter_listview(submissions,topbar="default")
 
 # the main flow of execution.
 #########################
