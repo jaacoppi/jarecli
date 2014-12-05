@@ -717,7 +717,15 @@ if __name__ == "__main__":
 			quit_jarecli()	
 
 
-	# 4. load the first subreddit. If logged in, it's the frontpage. This also displays it in listview
+	# 4. load the first subreddit. 
+	# If logged in, it's the frontpage. If not, it's set in the config file.
+	# if given as a command line argument, use that instead.
+	# TODO: --version, --help and other commandline options
+	import sys
+	# len(sys.argv) == 1 -> no arguments given, simply the name of the program file
+	if (len(sys.argv) == 2): # use first parameter as subreddit
+		listviewmod.currentlist.subreddit = sys.argv[1] 
+
 	submissions = load_subreddit()
 
 	# 5. start listview and enter the main loop that changes state to/from listview/readerview/infoview and others
