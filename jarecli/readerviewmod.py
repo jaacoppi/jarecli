@@ -43,7 +43,8 @@ class ReaderViewClass:
 
 		# print the first item in branch, move reader to top of branch
 		self.topmost = len(reader.contents)
-		appendline("New comment branch #%d:" % (self.comment_branch + 1), 1)
+		appendline("Comment branch #%d/" % (self.comment_branch + 1) + "%d:" % reader.comment_trees, 1)
+		# loop all replies, if any
 		self.comment_loopreplies(comment[self.comment_branch], parent_item)
 
 		# print from the top of the branch, with next keypress load the next branch
