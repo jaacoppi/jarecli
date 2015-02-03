@@ -1,10 +1,10 @@
-# jarecli - jaacoppi's reddit client
-# A reddit client using Python & PRAW
+# jarecli - jaacoppi's client for reddit
+# A client for reddit using Python & PRAW
 # MIT LICENSED. See LICENSE for details
 
 # some defines for version control
 PROGNAME = "jarecli"
-VERSION = "0.0.3b"
+VERSION = "0.0.3c"
 
 ## check for a minimum python version.
 ## TODO: figure out what version we actually need - 3.0 was just a guess
@@ -399,7 +399,7 @@ def subreddit_info():
 def keyboardloop():
 #########################
 	import curses
-	global keyboardmode
+	global keyboardmode, r
 	while (True):
 		input = uimod.uiscreen.getch()
 		# listviewkeys

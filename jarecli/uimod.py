@@ -1,5 +1,5 @@
-# jarecli - jaacoppi's reddit client
-# A reddit client using Python & PRAW
+# jarecli - jaacoppi's client for reddit
+# A client for reddit using Python & PRAW
 # MIT LICENSED. See LICENSE for details
 
 import curses
@@ -34,7 +34,7 @@ def initcurses(PROGNAME, VERSION):
 
 	# init the topmost line for version and copyright information.
 	prognameline = mainscreen.subwin(2,uiscreen_maxx,0,0)
-	prognameline.addstr(0,0, PROGNAME + " " + VERSION + " - A Reddit client (C) jaacoppi 2014")
+	prognameline.addstr(0,0, PROGNAME + " " + VERSION + " - jaacoppi's client for Reddit (C) jaacoppi 2014-2015")
 	
 	# define the topbar, where info about listview/readerview/infoview goes.
 	topbar = mainscreen.subwin(1,uiscreen_maxx,2,0)

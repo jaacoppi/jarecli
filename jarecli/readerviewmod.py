@@ -1,5 +1,5 @@
-# jarecli - jaacoppi's reddit client
-# A reddit client using Python & PRAW
+# jarecli - jaacoppi's client for reddit
+# A client for reddit using Python & PRAW
 # MIT LICENSED. See LICENSE for details
 
 # readerviewmod.py contains all readerview and infoview related code

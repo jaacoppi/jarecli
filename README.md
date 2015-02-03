@@ -1,9 +1,9 @@
-jarecli - jaacoppi's Reddit client
-##################################
+jarecli - jaacoppi's client for Reddit
+######################################
 
 About
 =====
-jarecli is a python-based reddit client using ncurses and praw. Developed with python 3.4.1 and PRAW 2.1.18. Tested with linux.
+jarecli is a python-based client for reddit using ncurses and praw. Developed with python 3.4.1 and PRAW 2.1.18. Tested with linux.
 
 The documentation is a work in progress and there might be mistakes.
 
