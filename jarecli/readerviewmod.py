@@ -84,6 +84,12 @@ def appendline(linestring, format = 0):
 #########################
 	global reader
 
+	# parse for markdown syntax
+	linestring = linestring.replace("&gt;",">")
+	linestring = linestring.replace("&lt;","<")
+	linestring = linestring.replace("&amp;","&")
+	# TODO: account for screen witdh and add newlines if need be
+
 	# TODO: appendline should detect all newlines. If there's a newline in linestring, append until it and continue from next line.
 	linestring = linestring.split("\n")
 	for item in linestring:
