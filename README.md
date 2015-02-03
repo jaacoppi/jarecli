@@ -33,6 +33,9 @@ Login required:
 4:		Show user hidden
 5:		Show user submitted
 6:		Show user comments (experimental & slow)
+(these two not from frontpage or user frontpage)
+s:		subscribe to subreddit 
+u:		unsubscribe from subreddit
 
 Keybindings in readerview
 =========================

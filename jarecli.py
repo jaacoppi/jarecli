@@ -451,6 +451,18 @@ def keyboardloop():
 				submit_message()
 				listviewmod.enter_listview(topbar="default")
 
+			# subscribe and unsubscribe
+			# TODO: error checking - if subscribed already / not subscribed
+			# also, keys should not work in frontpage
+			# also, return from infoview
+			if chr(input) == 'u':
+				r.get_subreddit(listviewmod.currentlist.subreddit).unsubscribe()
+				readerviewmod.enter_infoview([["Unsubscribed from this subreddit",0]])
+			if chr(input) == 's':
+				r.get_subreddit(listviewmod.currentlist.subreddit).subscribe()
+				readerviewmod.enter_infoview([["Subscribed to this subreddit",0]])
+
+
 		################
 		# readerviewkeys
 		################
